@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Header } from "@/components/aroha/Header";
 import { Greeting } from "@/components/aroha/Greeting";
 import { Streak } from "@/components/aroha/Streak";
@@ -17,8 +17,55 @@ const initialTasks: Task[] = [
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [streak, setStreak] = useState(0);
+//load task on start
+  useEffect(() => {
+    const saved = localStorage.getItem("tasks");
+    if (saved) setTasks(JSON.parse(saved));
+
+    const savedStreak = localStorage.getItem("streak");
+    if (savedStreak) setStreak(Number(savedStreak));
+  }, []);
 
   const completed = useMemo(() => tasks.filter((t) => t.done).length, [tasks]);
+useEffect(() => {
+  const today = new Date();
+  const todayStr = today.toDateString();
+
+  const last = localStorage.getItem("lastCompletedDate");
+
+  if (completed > 0) {
+    if (!last) {
+      // First time ever
+      setStreak(1);
+      localStorage.setItem("lastCompletedDate", todayStr);
+    } else {
+      const lastDate = new Date(last);
+
+      const diffDays =
+        (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (diffDays === 1) {
+        // consecutive day
+        setStreak((prev) => prev + 1);
+      } else if (diffDays > 1) {
+        // missed days → reset
+        setStreak(1);
+      }
+
+      localStorage.setItem("lastCompletedDate", todayStr);
+    }
+  }
+}, [completed]);
+
+  // Save tasks on change
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem("streak", String(streak));
+  }, [streak]);
 
   const toggle = (id: string) =>
     setTasks((prev) =>
@@ -27,15 +74,19 @@ const Index = () => {
 
   const add = (text: string) =>
     setTasks((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+  
+  const remove = (id: string) =>
+  setTasks((prev) => prev.filter((t) => t.id !== id));
+
 
   return (
     <main className="aroha-bg min-h-screen">
       <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
         <Header />
         <Greeting />
-        <Streak />
+        <Streak days={streak} />
         <ProgressCard completed={completed} total={tasks.length} />
-        <Tasks tasks={tasks} onToggle={toggle} onAdd={add} />
+        <Tasks tasks={tasks} onToggle={toggle} onAdd={add} onDelete={remove} />
         <Quote />
         <Reflection />
       </div>

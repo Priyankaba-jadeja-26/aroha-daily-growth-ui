@@ -3,7 +3,7 @@ import { Flame } from "lucide-react";
 type Props = { days?: number; weekDots?: boolean[] };
 
 export const Streak = ({
-  days = 12,
+  days = 0,
   weekDots = [true, true, true, false, true, true, false],
 }: Props) => {
   const labels = ["M", "T", "W", "T", "F", "S", "S"];
