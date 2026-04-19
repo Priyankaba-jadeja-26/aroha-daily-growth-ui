@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Feather } from "lucide-react";
+import { Annoyed } from "lucide-react";
 
 const moods = [
   { emoji: "😌", label: "Calm" },
@@ -19,7 +19,7 @@ export const Reflection = () => {
       <div className="glass-deep rounded-[24px] p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sunrise shadow-soft">
-            <Feather className="h-4 w-4 text-white" strokeWidth={2} />
+            <Annoyed className="h-4 w-4 text-white" strokeWidth={2} />
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
