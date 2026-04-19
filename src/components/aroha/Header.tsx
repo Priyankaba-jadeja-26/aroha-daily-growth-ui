@@ -9,7 +9,7 @@ export const Header = () => (
       </div>
       <div className="flex flex-col leading-tight">
         <h1 className="font-display text-2xl font-bold tracking-tight">
-          <span className="bg-sunrise bg-clip-text text-transparent text-2xl">Aroha</span>
+          <span className="cursor-pointer font-bold bg-gradient-to-r from-pink-600 to-orange-400 bg-clip-text text-transparent">Aroha</span>
         </h1>
         <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
           Grow a little, every day

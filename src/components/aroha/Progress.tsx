@@ -49,7 +49,7 @@ export const ProgressCard = ({ completed, total }: Props) => {
               </p>
             </div>
           </div>
-          <span className="font-display text-2xl font-bold tabular-nums bg-sunrise bg-clip-text text-transparent">
+          <span className="font-display text-2xl font-bold tabular-nums text-accent">
             {displayPct}%
           </span>
         </div>
