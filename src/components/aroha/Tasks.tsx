@@ -42,21 +42,26 @@ export const Tasks = ({ tasks, onToggle, onAdd }: Props) => {
           <li key={t.id}>
             <button
               onClick={() => onToggle(t.id)}
-              className="glass group flex w-full items-center gap-3 rounded-2xl p-4 text-left shadow-soft transition-smooth hover:shadow-card"
+              className="glass-deep group flex w-full items-center gap-3 rounded-2xl p-4 text-left transition-smooth hover:scale-[1.01] hover:shadow-glow active:scale-[0.99]"
             >
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border transition-smooth ${
+                className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border transition-all duration-300 ${
                   t.done
-                    ? "border-transparent bg-sunrise shadow-glow"
-                    : "border-border bg-white/60 group-hover:border-foreground/30"
+                    ? "border-transparent bg-sunrise shadow-glow scale-105"
+                    : "border-border bg-white/60 group-hover:border-foreground/40 group-hover:scale-110"
                 }`}
               >
-                {t.done && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                {t.done && (
+                  <Check
+                    className="h-3.5 w-3.5 text-white animate-check-pop"
+                    strokeWidth={3}
+                  />
+                )}
               </span>
               <span
-                className={`flex-1 text-[15px] transition-smooth ${
+                className={`flex-1 text-[15px] transition-all duration-300 ${
                   t.done
-                    ? "text-muted-foreground line-through"
+                    ? "text-muted-foreground line-through opacity-70"
                     : "font-medium text-foreground"
                 }`}
               >
