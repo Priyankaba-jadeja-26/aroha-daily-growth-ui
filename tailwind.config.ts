@@ -73,24 +73,6 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
-        },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
-        },
-      },
-      keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
         "float": {
@@ -105,6 +87,27 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "aurora-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "check-pop": {
+          "0%": { transform: "scale(0.6)", opacity: "0" },
+          "60%": { transform: "scale(1.15)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "flame-flicker": {
+          "0%, 100%": { transform: "scale(1) rotate(-2deg)", filter: "brightness(1)" },
+          "50%": { transform: "scale(1.08) rotate(2deg)", filter: "brightness(1.15)" },
+        },
+        "progress-shine": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(250%)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.04)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -112,6 +115,11 @@ export default {
         "float": "float 6s ease-in-out infinite",
         "fade-up": "fade-up 0.6s cubic-bezier(0.4,0,0.2,1) both",
         "shimmer": "shimmer 3s linear infinite",
+        "aurora-shift": "aurora-shift 18s ease-in-out infinite",
+        "check-pop": "check-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) both",
+        "flame-flicker": "flame-flicker 1.6s ease-in-out infinite",
+        "progress-shine": "progress-shine 2.4s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 3s ease-in-out infinite",
       },
     },
   },

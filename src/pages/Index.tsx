@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { Header } from "@/components/aroha/Header";
 import { Greeting } from "@/components/aroha/Greeting";
+import { Streak } from "@/components/aroha/Streak";
 import { ProgressCard } from "@/components/aroha/Progress";
 import { Tasks, type Task } from "@/components/aroha/Tasks";
+import { Quote } from "@/components/aroha/Quote";
 import { Reflection } from "@/components/aroha/Reflection";
 
 const initialTasks: Task[] = [
@@ -31,8 +33,10 @@ const Index = () => {
       <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
         <Header />
         <Greeting />
+        <Streak />
         <ProgressCard completed={completed} total={tasks.length} />
         <Tasks tasks={tasks} onToggle={toggle} onAdd={add} />
+        <Quote />
         <Reflection />
       </div>
     </main>
