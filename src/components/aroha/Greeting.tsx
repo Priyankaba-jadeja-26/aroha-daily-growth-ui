@@ -3,7 +3,7 @@ import { Sun, Moon, Sunrise } from "lucide-react";
 const getGreetingData = () => {
   const h = new Date().getHours();
   if (h < 12) return { text: "Good Morning", sub: "A fresh canvas awaits — breathe deep and begin gently.", Icon: Sunrise };
-  if (h < 18) return { text: "Good Afternoon", sub: "Stay grounded. Small wins are still wins.", Icon: Sun };
+  if (h < 18) return { text: "Good Afternoon", sub: "Stay grounded. Small wins lead to great achievements.", Icon: Sun };
   return { text: "Good Evening", sub: "Soften your shoulders. You've carried enough today.", Icon: Moon };
 };
 
@@ -34,7 +34,7 @@ export const Greeting = () => {
             {formattedDate()}
           </div>
           <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {text}, <span className="bg-sunrise bg-clip-text text-transparent">Sage</span>
+            {text}, <span className="bg-sunrise bg-clip-text text-transparent text-3xl">Sage</span>
           </h2>
           <p className="mt-2 max-w-md text-sm font-light leading-relaxed text-muted-foreground sm:text-base text-balance">
             {sub}
