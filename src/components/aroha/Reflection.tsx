@@ -1,0 +1,42 @@
+import { useState } from "react";
+import { Feather } from "lucide-react";
+
+export const Reflection = () => {
+  const [value, setValue] = useState("");
+  return (
+    <section className="relative z-10 px-5 pb-10 sm:px-8 animate-fade-up">
+      <div className="glass rounded-[24px] p-5 sm:p-6 shadow-card">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sunrise shadow-soft">
+            <Feather className="h-4 w-4 text-white" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Daily Reflection
+            </p>
+            <p className="font-display text-base font-semibold text-foreground">
+              How are you feeling today?
+            </p>
+          </div>
+        </div>
+
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Write your thoughts..."
+          rows={5}
+          className="w-full resize-none rounded-2xl border border-border bg-white/60 p-4 text-[15px] font-light leading-relaxed text-foreground outline-none transition-smooth placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring"
+        />
+
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {value.length} characters
+          </span>
+          <button className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:scale-105">
+            Save reflection
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
