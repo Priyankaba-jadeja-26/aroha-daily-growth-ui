@@ -1,16 +1,42 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useMemo, useState } from "react";
+import { Header } from "@/components/aroha/Header";
+import { Greeting } from "@/components/aroha/Greeting";
+import { ProgressCard } from "@/components/aroha/Progress";
+import { Tasks, type Task } from "@/components/aroha/Tasks";
+import { Reflection } from "@/components/aroha/Reflection";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const initialTasks: Task[] = [
+  { id: "1", text: "10 minutes of mindful breathing", done: true },
+  { id: "2", text: "Drink a glass of water", done: true },
+  { id: "3", text: "Read 15 pages of a book", done: true },
+  { id: "4", text: "Take a walk outside", done: false },
+  { id: "5", text: "Plan tomorrow with intention", done: false },
+];
+
+const Index = () => {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+
+  const completed = useMemo(() => tasks.filter((t) => t.done).length, [tasks]);
+
+  const toggle = (id: string) =>
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+    );
+
+  const add = (text: string) =>
+    setTasks((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <main className="aroha-bg min-h-screen">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
+        <Header />
+        <Greeting />
+        <ProgressCard completed={completed} total={tasks.length} />
+        <Tasks tasks={tasks} onToggle={toggle} onAdd={add} />
+        <Reflection />
+      </div>
+    </main>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
