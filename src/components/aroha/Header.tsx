@@ -20,6 +20,7 @@ export const Header = ({ onSettingsClick }: { onSettingsClick: () => void }) => 
     <div className="flex items-center gap-2">
       <button
         aria-label="Notifications"
+        onClick={() => alert("Notifications coming soon 🚀")}
         className="glass-deep relative flex h-11 w-11 items-center justify-center rounded-2xl text-foreground/70 transition-smooth hover:scale-105 hover:text-foreground"
       >
         <Bell className="h-5 w-5" strokeWidth={1.6} />
