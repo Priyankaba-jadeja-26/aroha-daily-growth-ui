@@ -93,18 +93,18 @@ useEffect(() => {
         </div>
 
         {saved && (
-          <div className="mt-4 rounded-2xl bg-white/60 p-4">
-            <p className="text-xs text-muted-foreground mb-1">
-              Saved reflection:
+          <div className="mt-5 rounded-2xl border border-border bg-white/70 p-4 shadow-soft animate-fade-up">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+              Saved Reflection
             </p>
 
             {saved.mood && (
               <p className="text-xs text-muted-foreground mb-1">
-                Mood: {saved.mood}
+                Mood: <span className="font-medium text-foreground">{saved.mood}</span>
               </p>
             )}
 
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-foreground leading-relaxed">
               {saved.text}
             </p>
           </div>
