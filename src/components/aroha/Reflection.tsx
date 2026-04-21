@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Annoyed } from "lucide-react";
 
 const moods = [
@@ -13,6 +13,23 @@ const moods = [
 export const Reflection = () => {
   const [value, setValue] = useState("");
   const [mood, setMood] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ text: string; mood: string | null } | null>(null);
+
+  const handleSave = () => {
+  if (!value.trim()) return;
+
+  const data = { text: value, mood };
+
+  localStorage.setItem("reflection", JSON.stringify(data));
+  setSaved(data);
+  setValue("");
+  setMood(null);
+};
+
+useEffect(() => {
+  const stored = localStorage.getItem("reflection");
+  if (stored) setSaved(JSON.parse(stored));
+}, []);
 
   return (
     <section className="relative z-10 px-5 pb-10 sm:px-8 animate-fade-up">
@@ -67,11 +84,34 @@ export const Reflection = () => {
           <span className="text-xs text-muted-foreground">
             {value.length} characters{mood ? ` · feeling ${mood.toLowerCase()}` : ""}
           </span>
-          <button className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:scale-105 hover:shadow-glow active:scale-95">
+          <button
+            onClick={handleSave}
+            className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:scale-105 hover:shadow-glow active:scale-95"
+          >
             Save reflection
           </button>
         </div>
+
+        {saved && (
+          <div className="mt-4 rounded-2xl bg-white/60 p-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              Saved reflection:
+            </p>
+
+            {saved.mood && (
+              <p className="text-xs text-muted-foreground mb-1">
+                Mood: {saved.mood}
+              </p>
+            )}
+
+            <p className="text-sm text-foreground">
+              {saved.text}
+            </p>
+          </div>
+        )}
+
       </div>
+      
     </section>
   );
 };
