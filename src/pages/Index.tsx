@@ -6,6 +6,8 @@ import { ProgressCard } from "@/components/aroha/Progress";
 import { Tasks, type Task } from "@/components/aroha/Tasks";
 import { Quote } from "@/components/aroha/Quote";
 import { Reflection } from "@/components/aroha/Reflection";
+import { SettingsModal } from "@/components/aroha/SettingsModal";
+
 
 const initialTasks: Task[] = [
   { id: "1", text: "10 minutes of mindful breathing", done: true },
@@ -18,6 +20,7 @@ const initialTasks: Task[] = [
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [streak, setStreak] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 //load task on start
   useEffect(() => {
     const saved = localStorage.getItem("tasks");
@@ -78,11 +81,15 @@ useEffect(() => {
   const remove = (id: string) =>
   setTasks((prev) => prev.filter((t) => t.id !== id));
 
+  const resetTasks = () => {
+    setTasks([]);
+    localStorage.removeItem("tasks");
+  };
 
   return (
     <main className="aroha-bg min-h-screen">
       <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
-        <Header />
+        <Header onSettingsClick={() => setSettingsOpen(true)} />
         <Greeting />
         <Streak days={streak} />
         <ProgressCard completed={completed} total={tasks.length} />
@@ -90,6 +97,11 @@ useEffect(() => {
         <Quote />
         <Reflection />
       </div>
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onResetTasks={resetTasks}
+      />
     </main>
   );
 };

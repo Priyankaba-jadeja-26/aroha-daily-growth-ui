@@ -1,7 +1,7 @@
 import { Bell, Settings } from "lucide-react";
 import { AromaLogo } from "./Logo";
 
-export const Header = () => (
+export const Header = ({ onSettingsClick }: { onSettingsClick: () => void }) => (
   <header className="relative z-10 flex items-center justify-between px-5 pt-6 pb-2 sm:px-8 sm:pt-8">
     <div className="flex items-center gap-3">
       <div className="animate-float">
@@ -27,6 +27,7 @@ export const Header = () => (
       </button>
       <button
         aria-label="Settings"
+        onClick={onSettingsClick}
         className="glass-deep flex h-11 w-11 items-center justify-center rounded-2xl text-foreground/70 transition-smooth hover:scale-105 hover:text-foreground"
       >
         <Settings className="h-5 w-5" strokeWidth={1.6} />
