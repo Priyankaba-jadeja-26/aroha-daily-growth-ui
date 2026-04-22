@@ -14,6 +14,7 @@ export const Reflection = () => {
   const [value, setValue] = useState("");
   const [mood, setMood] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ text: string; mood: string | null } | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
   const handleSave = () => {
   if (!value.trim()) return;
@@ -24,6 +25,10 @@ export const Reflection = () => {
   setSaved(data);
   setValue("");
   setMood(null);
+
+  // NEW: success feedback
+  setJustSaved(true);
+  setTimeout(() => setJustSaved(false), 1500);
 };
 
 useEffect(() => {
@@ -91,27 +96,41 @@ useEffect(() => {
             Save reflection
           </button>
         </div>
-
-        {saved && (
-          <div className="mt-5 rounded-2xl border border-border bg-white/70 p-4 shadow-soft animate-fade-up">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-              Saved Reflection
-            </p>
-
-            {saved.mood && (
-              <p className="text-xs text-muted-foreground mb-1">
-                Mood: <span className="font-medium text-foreground">{saved.mood}</span>
-              </p>
-            )}
-
-            <p className="text-sm text-foreground leading-relaxed">
-              {saved.text}
-            </p>
-          </div>
+        
+        {justSaved && (
+          <p className="text-xs text-green-500 mt-2">
+            Saved successfully ✓
+          </p>
         )}
 
+        {saved && (
+          <div className="mt-6 border-t border-border/40 pt-4">
+            <div className="rounded-2xl bg-white/60 p-4 border border-border shadow-soft backdrop-blur">
+              <div className="mt-5 rounded-2xl border border-border bg-white/0 p-4 border border-border shadow-soft backdrop-blur">
+                <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-2">
+                  Saved Reflection
+                </p>
+
+                {saved.mood && (
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Mood: <span className="font-medium text-foreground">{saved.mood}</span>
+                  </p>
+                )}
+
+                <p className="text-sm text-foreground leading-relaxed">
+                  {saved.text}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        {!saved && (
+          <p className="text-xs text-muted-foreground mt-3">
+              No reflection saved yet.
+          </p>
+        )}
       </div>
-      
+          
     </section>
   );
 };
