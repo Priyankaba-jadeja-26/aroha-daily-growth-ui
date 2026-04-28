@@ -15,25 +15,60 @@ export const Reflection = () => {
   const [mood, setMood] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ text: string; mood: string | null } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
+  const [response, setResponse] = useState<string | null>(null);
 
-  const handleSave = () => {
-  if (!value.trim()) return;
+  const generateResponse = (text: string, mood: string | null) => {
+  const lower = text.toLowerCase();
 
-  const data = { text: value, mood };
+  if (mood === "Anxious") {
+    return "Take a deep breath. You're safe. Try focusing on what you can control right now.";
+  }
 
-  localStorage.setItem("reflection", JSON.stringify(data));
-  setSaved(data);
-  setValue("");
-  setMood(null);
+  if (mood === "Low") {
+    return "It's okay to feel low. You don’t need to fix everything today. Just take one small step.";
+  }
 
-  // NEW: success feedback
-  setJustSaved(true);
-  setTimeout(() => setJustSaved(false), 1500);
+  if (mood === "Happy") {
+    return "That's amazing! Capture this moment and carry this energy forward.";
+  }
+
+  if (lower.includes("tired")) {
+    return "Your body might be asking for rest. Recharge before pushing further.";
+  }
+
+  if (lower.includes("stress") || lower.includes("pressure")) {
+    return "Pause for a moment. Even 5 minutes of stillness can reset your mind.";
+  }
+
+    return "You're doing better than you think. Keep going.";
 };
 
-useEffect(() => {
-  const stored = localStorage.getItem("reflection");
-  if (stored) setSaved(JSON.parse(stored));
+  const handleSave = () => {
+    if (!value.trim()) return;
+
+    const ai = generateResponse(value, mood);
+
+    const data = { text: value, mood, ai };
+
+    localStorage.setItem("reflection", JSON.stringify(data));
+    setSaved(data);
+    setResponse(ai);
+
+    setValue("");
+    setMood(null);
+
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem("reflection");
+    if (stored){
+      const parsed = JSON.parse(stored);
+      setSaved(parsed);
+      setResponse(parsed.ai);
+    };
+
 }, []);
 
   return (
@@ -128,6 +163,17 @@ useEffect(() => {
           <p className="text-xs text-muted-foreground mt-3">
               No reflection saved yet.
           </p>
+        )}
+
+         {response && (
+          <div className="mt-4 rounded-2xl bg-gradient-to-r from-pink-100 to-orange-100 p-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">
+              Aroha Insight
+            </p>
+            <p className="text-sm text-foreground">
+              {response}
+            </p>
+          </div>
         )}
       </div>
           
