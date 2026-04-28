@@ -30,6 +30,25 @@ const Index = () => {
     if (savedStreak) setStreak(Number(savedStreak));
   }, []);
 
+
+  useEffect(() => {
+    const last = localStorage.getItem("lastCompletedDate");
+    if (!last) return;
+
+    const today = new Date();
+    const lastDate = new Date(last);
+
+    const diffDays = Math.floor(
+      (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays > 1) {
+      // missed days → reset streak
+      setStreak(0);
+      localStorage.setItem("streak", "0");
+    }
+  }, []);
+
   const completed = useMemo(() => tasks.filter((t) => t.done).length, [tasks]);
 useEffect(() => {
   const today = new Date();
