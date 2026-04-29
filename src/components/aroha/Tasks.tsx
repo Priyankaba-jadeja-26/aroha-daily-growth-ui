@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
 
-export type Task = { id: string; text: string; done: boolean };
+export type Task = { id: string; text: string; done: boolean; completedDate?: string; };
 
 type Props = {
   tasks: Task[];

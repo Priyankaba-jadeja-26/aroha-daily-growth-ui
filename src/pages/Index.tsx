@@ -10,9 +10,9 @@ import { SettingsModal } from "@/components/aroha/SettingsModal";
 
 
 const initialTasks: Task[] = [
-  { id: "1", text: "10 minutes of mindful breathing", done: true },
-  { id: "2", text: "Drink a glass of water", done: true },
-  { id: "3", text: "Read 15 pages of a book", done: true },
+  { id: "1", text: "10 minutes of mindful breathing", done: false },
+  { id: "2", text: "Drink a glass of water", done: false },
+  { id: "3", text: "Read 15 pages of a book", done: false },
   { id: "4", text: "Take a walk outside", done: false },
   { id: "5", text: "Plan tomorrow with intention", done: false },
 ];
@@ -30,55 +30,45 @@ const Index = () => {
     if (savedStreak) setStreak(Number(savedStreak));
   }, []);
 
+const completed = useMemo(
+  () => {
+    const todayStr = new Date().toDateString();
+    return tasks.filter(
+    (t) => t.done && t.completedDate === todayStr
+  ).length;
+}, [tasks]);
 
   useEffect(() => {
+    const todayStr = new Date().toDateString();
     const last = localStorage.getItem("lastCompletedDate");
-    if (!last) return;
 
-    const today = new Date();
-    const lastDate = new Date(last);
+    if (completed === 0) return; // no task done → do nothing
 
-    const diffDays = Math.floor(
-      (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffDays > 1) {
-      // missed days → reset streak
-      setStreak(0);
-      localStorage.setItem("streak", "0");
-    }
-  }, []);
-
-  const completed = useMemo(() => tasks.filter((t) => t.done).length, [tasks]);
-useEffect(() => {
-  const today = new Date();
-  const todayStr = today.toDateString();
-
-  const last = localStorage.getItem("lastCompletedDate");
-
-  if (completed > 0) {
     if (!last) {
-      // First time ever
       setStreak(1);
       localStorage.setItem("lastCompletedDate", todayStr);
-    } else {
-      const lastDate = new Date(last);
-
-      const diffDays =
-        (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-
-      if (diffDays === 1) {
-        // consecutive day
-        setStreak((prev) => prev + 1);
-      } else if (diffDays > 1) {
-        // missed days → reset
-        setStreak(1);
-      }
-
-      localStorage.setItem("lastCompletedDate", todayStr);
+      return;
     }
-  }
-}, [completed]);
+
+    const lastDate = new Date(last);
+    const currentDate = new Date();
+
+    const diffDays =
+      (currentDate.getTime() - lastDate.getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    if (diffDays === 0) {
+      return; // already counted today
+    }
+
+    if (diffDays === 1) {
+      setStreak((prev) => prev + 1);
+    } else {
+      setStreak(1); // reset
+    }
+
+    localStorage.setItem("lastCompletedDate", todayStr);
+  }, [completed]);
 
   // Save tasks on change
   useEffect(() => {
@@ -89,9 +79,24 @@ useEffect(() => {
     localStorage.setItem("streak", String(streak));
   }, [streak]);
 
+  useEffect(() => {
+    let lastDate = new Date().toDateString();
+
+  const interval = setInterval(() => {
+    const currentDate = new Date().toDateString();
+
+    if (currentDate !== lastDate) {
+      lastDate = currentDate;
+      setTasks((prev) => [...prev]); // trigger only on date change
+    }
+  }, 60000);
+
+  return () => clearInterval(interval);
+  }, []);
+
   const toggle = (id: string) =>
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done, completedDate: !t.done ? new Date().toDateString() : undefined, } : t))
     );
 
   const add = (text: string) =>
