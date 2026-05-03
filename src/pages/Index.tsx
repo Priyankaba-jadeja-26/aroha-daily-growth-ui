@@ -53,9 +53,11 @@ const completed = useMemo(
     const lastDate = new Date(last);
     const currentDate = new Date();
 
-    const diffDays =
+    const diffDays = Math.floor(
       (currentDate.getTime() - lastDate.getTime()) /
-      (1000 * 60 * 60 * 24);
+      (1000 * 60 * 60 * 24)
+    );
+      
 
     if (diffDays === 0) {
       return; // already counted today
@@ -108,14 +110,127 @@ const completed = useMemo(
   const resetTasks = () => {
     setTasks([]);
     localStorage.removeItem("tasks");
+    localStorage.removeItem("lastCompletedDate");
+    setStreak(0);
   };
 
+  const getStreakWarning = () => {
+    const todayStr = new Date().toDateString();
+    const last = localStorage.getItem("lastCompletedDate");
+
+    if (!last) return null;
+    if (last === todayStr) return null;
+
+    if (streak > 0) {
+      return "You haven't completed any task today — don’t break your streak.";
+    }
+
+    return null;
+  };
+
+  const getSmartSuggestion = () => {
+    const savedReflection = localStorage.getItem("reflection");
+    const mood = savedReflection ? JSON.parse(savedReflection).mood : null;
+
+    if (completed === 0) {
+      if (mood === "Low") return "Start very small today. Even 1 task is a win.";
+      if (mood === "Anxious") return "Pause and take one calming action first.";
+      if (streak >= 3) return "Don’t break your streak. Just complete one task.";
+      return "Start your day with one simple action.";
+    }
+
+    if (completed === 1 && tasks.length > 2) {
+      return "Good start. Build momentum with one more task.";
+    }
+
+    if (completed > 0 && completed < tasks.length) {
+      return "Good progress. Try completing one more task.";
+    }
+
+    if (completed === tasks.length && tasks.length > 0) {
+      return "You showed discipline today. That’s powerful.";
+    }
+
+    if (streak >= 3) {
+      return "You’re on a streak. Don’t break it now.";
+    }
+
+    return "Keep going, you’re making progress.";
+  };
+
+  const getDailyInsight = () => {
+    if (completed === 0 && streak > 0) { // ✅ fixed
+      return "You’re close to breaking your streak. Show up today.";
+    }
+
+    if (completed > 0 && completed < tasks.length) {
+      return "Progress matters more than perfection.";
+    }
+
+    if (completed === tasks.length && tasks.length > 0) {
+      return "You completed everything today. That’s rare consistency.";
+    }
+
+    if (streak >= 5) {
+      return "You’re building discipline, not just motivation.";
+    }
+
+    if (streak === 0) {
+      return "Every strong routine starts with one day.";
+    }
+
+    return "Keep showing up daily. That’s how growth happens.";
+  };
+
+  const warning = getStreakWarning();
+  const insight = getDailyInsight();   
+  const suggestion = getSmartSuggestion();
+  
   return (
     <main className="aroha-bg min-h-screen">
       <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
         <Header onSettingsClick={() => setSettingsOpen(true)} />
         <Greeting />
         <Streak days={streak} />
+        {warning && (
+          <div className="px-5 sm:px-8">
+            <div className="rounded-2xl bg-yellow-100/80 border border-yellow-200 p-4 shadow-soft animate-pulse">
+              <p className="text-xs font-semibold text-yellow-700 mb-1">
+                Reminder
+              </p>
+              <p className="text-sm text-foreground">
+                {warning}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {suggestion && (
+          <div className="px-5 sm:px-8">
+            <div className="rounded-2xl bg-blue-100/80 border border-blue-200 p-4 shadow-soft">
+              <p className="text-xs font-semibold text-blue-700 mb-1">
+                Suggestion
+              </p>
+              <p className="text-sm text-foreground">
+                {suggestion}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {insight && (
+          <div className="px-5 sm:px-8">
+            <div className="rounded-2xl bg-purple-100/80 border border-purple-200 p-4 shadow-soft">
+              <p className="text-xs font-semibold text-purple-700 mb-1">
+                Insight
+              </p>
+              <p className="text-sm text-foreground">
+                {insight}
+              </p>
+            </div>
+          </div>
+        )}
+
         <ProgressCard completed={completed} total={tasks.length} />
         <Tasks tasks={tasks} onToggle={toggle} onAdd={add} onDelete={remove} />
         <Quote />
