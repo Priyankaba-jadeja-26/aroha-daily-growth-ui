@@ -277,9 +277,9 @@ const completed = useMemo(
 
           <button
             onClick={handleLogout}
-            className="mx-5 mb-6 rounded-3xl bg-gradient-to-r from-pink-100/70 to-orange-100/70 border border-white/40 py-3 text-sm font-medium text-pink-700 shadow-soft backdrop-blur-sm transition-all hover:scale-[1.01] hover:opacity-90"
+            className="mx-auto mb-6 w-56 rounded-3xl bg-gradient-to-r from-pink-100/70 to-orange-100/70 border border-white/40 py-3 text-base font-bold tracking-widest text-[#b85c78] shadow-soft backdrop-blur-sm transition-all hover:shadow-lg hover:scale-[1.01] hover:opacity-90"
           >
-            Logout
+            Sign out
           </button>
           
         </div>
