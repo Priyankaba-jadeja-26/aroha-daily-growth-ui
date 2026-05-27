@@ -7,7 +7,9 @@ import { Tasks, type Task } from "@/components/aroha/Tasks";
 import { Quote } from "@/components/aroha/Quote";
 import { Reflection } from "@/components/aroha/Reflection";
 import { SettingsModal } from "@/components/aroha/SettingsModal";
-
+import { Auth } from "@/components/aroha/Auth";
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 const initialTasks: Task[] = [
   { id: "1", text: "10 minutes of mindful breathing", done: false },
@@ -21,6 +23,7 @@ const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [streak, setStreak] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
 //load task on start
   useEffect(() => {
     const saved = localStorage.getItem("tasks");
@@ -29,6 +32,24 @@ const Index = () => {
     const savedStreak = localStorage.getItem("streak");
     if (savedStreak) setStreak(Number(savedStreak));
   }, []);
+
+  useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session);
+  });
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setSession(session);
+  });
+
+  return () => subscription.unsubscribe();
+}, []);
+
+const handleLogout = async () => {
+  await supabase.auth.signOut();
+};
 
 const completed = useMemo(
   () => {
@@ -188,54 +209,82 @@ const completed = useMemo(
   
   return (
     <main className="aroha-bg min-h-screen">
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
-        <Header onSettingsClick={() => setSettingsOpen(true)} />
-        <Greeting />
-        <Streak days={streak} />
-        {warning && (
-          <div className="px-5 sm:px-8">
-            <div className="rounded-2xl bg-yellow-100/80 border border-yellow-200 p-4 shadow-soft animate-pulse">
-              <p className="text-xs font-semibold text-yellow-700 mb-1">
-                Reminder
-              </p>
-              <p className="text-sm text-foreground">
-                {warning}
-              </p>
-            </div>
-          </div>
-        )}
+      {!session ? (
+        <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
+          <Header onSettingsClick={() => setSettingsOpen(true)} />
+          <Auth />
+        </div>
+      ) : (
+        <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-10">
+          <Header onSettingsClick={() => setSettingsOpen(true)} />
 
-        {suggestion && (
-          <div className="px-5 sm:px-8">
-            <div className="rounded-2xl bg-blue-100/80 border border-blue-200 p-4 shadow-soft">
-              <p className="text-xs font-semibold text-blue-700 mb-1">
-                Suggestion
-              </p>
-              <p className="text-sm text-foreground">
-                {suggestion}
-              </p>
-            </div>
-          </div>
-        )}
+          <Greeting />
+          <Streak days={streak} />
 
-        {insight && (
-          <div className="px-5 sm:px-8">
-            <div className="rounded-2xl bg-purple-100/80 border border-purple-200 p-4 shadow-soft">
-              <p className="text-xs font-semibold text-purple-700 mb-1">
-                Insight
-              </p>
-              <p className="text-sm text-foreground">
-                {insight}
-              </p>
-            </div>
-          </div>
-        )}
+          {warning && (
+            <div className="px-5 sm:px-8">
+              <div className="rounded-2xl bg-yellow-100/80 border border-yellow-200 p-4 shadow-soft animate-pulse">
+                <p className="text-xs font-semibold text-yellow-700 mb-1">
+                  Reminder
+                </p>
 
-        <ProgressCard completed={completed} total={tasks.length} />
-        <Tasks tasks={tasks} onToggle={toggle} onAdd={add} onDelete={remove} />
-        <Quote />
-        <Reflection />
-      </div>
+                <p className="text-sm text-foreground">
+                  {warning}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {suggestion && (
+            <div className="px-5 sm:px-8">
+              <div className="rounded-2xl bg-blue-100/80 border border-blue-200 p-4 shadow-soft">
+                <p className="text-xs font-semibold text-blue-700 mb-1">
+                  Suggestion
+                </p>
+
+                <p className="text-sm text-foreground">
+                  {suggestion}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {insight && (
+            <div className="px-5 sm:px-8">
+              <div className="rounded-2xl bg-purple-100/80 border border-purple-200 p-4 shadow-soft">
+                <p className="text-xs font-semibold text-purple-700 mb-1">
+                  Insight
+                </p>
+
+                <p className="text-sm text-foreground">
+                  {insight}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <ProgressCard completed={completed} total={tasks.length} />
+
+          <Tasks
+            tasks={tasks}
+            onToggle={toggle}
+            onAdd={add}
+            onDelete={remove}
+          />
+
+          <Quote />
+          <Reflection />
+
+          <button
+            onClick={handleLogout}
+            className="mx-5 mb-6 rounded-3xl bg-gradient-to-r from-pink-100/70 to-orange-100/70 border border-white/40 py-3 text-sm font-medium text-pink-700 shadow-soft backdrop-blur-sm transition-all hover:scale-[1.01] hover:opacity-90"
+          >
+            Logout
+          </button>
+          
+        </div>
+      )}
+
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
