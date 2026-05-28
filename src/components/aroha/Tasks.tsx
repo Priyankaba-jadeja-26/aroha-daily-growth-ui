@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export type Task = { id: string; text: string; done: boolean; completedDate?: string; };
 
@@ -13,11 +14,46 @@ type Props = {
 export const Tasks = ({ tasks, onToggle, onAdd, onDelete }: Props) => {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const submit = () => {
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+
+    getUser();
+  }, []);
+
+  const submit = async () => {
     const v = draft.trim();
-    if (!v) return setAdding(false);
+
+    if (!v || !userId) {
+      setAdding(false);
+      return;
+    }
+
+    const { error } = await supabase.from("task").insert([
+      {
+        user_id: userId,
+        text: v,
+        done: false,
+        completedDate: null,
+      },
+    ]);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
     onAdd(v);
+
     setDraft("");
     setAdding(false);
   };
@@ -76,16 +112,13 @@ export const Tasks = ({ tasks, onToggle, onAdd, onDelete }: Props) => {
 
               {/* DELETE BUTTON */}
               <button
-                onClick={() => {if (confirm("Delete this task?")) onDelete(t.id);}}
-                className="text-muted-foreground hover:text-red-500 transition"
+                onClick={() => {
+                  if (confirm("Delete this task?")) onDelete(t.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition"
+                aria-label="Delete task"
               >
-                <button
-                  onClick={() => onDelete(t.id)}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition"
-                  aria-label="Delete task"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <Trash2 className="h-4 w-4" />
               </button>
 
             </div>

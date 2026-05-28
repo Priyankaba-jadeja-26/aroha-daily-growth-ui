@@ -11,27 +11,13 @@ import { Auth } from "@/components/aroha/Auth";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-const initialTasks: Task[] = [
-  { id: "1", text: "10 minutes of mindful breathing", done: false },
-  { id: "2", text: "Drink a glass of water", done: false },
-  { id: "3", text: "Read 15 pages of a book", done: false },
-  { id: "4", text: "Take a walk outside", done: false },
-  { id: "5", text: "Plan tomorrow with intention", done: false },
-];
-
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [streak, setStreak] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
 //load task on start
-  useEffect(() => {
-    const saved = localStorage.getItem("tasks");
-    if (saved) setTasks(JSON.parse(saved));
 
-    const savedStreak = localStorage.getItem("streak");
-    if (savedStreak) setStreak(Number(savedStreak));
-  }, []);
 
   useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -46,6 +32,27 @@ const Index = () => {
 
   return () => subscription.unsubscribe();
 }, []);
+
+useEffect(() => {
+  if (!session?.user) return;
+
+  const loadTasks = async () => {
+    const { data, error } = await supabase
+      .from("task")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setTasks(data || []);
+  };
+
+  loadTasks();
+}, [session]);
 
 const handleLogout = async () => {
   await supabase.auth.signOut();
@@ -93,10 +100,6 @@ const completed = useMemo(
     localStorage.setItem("lastCompletedDate", todayStr);
   }, [completed]);
 
-  // Save tasks on change
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
 
   useEffect(() => {
     localStorage.setItem("streak", String(streak));
@@ -117,20 +120,82 @@ const completed = useMemo(
   return () => clearInterval(interval);
   }, []);
 
-  const toggle = (id: string) =>
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done, completedDate: !t.done ? new Date().toDateString() : undefined, } : t))
-    );
+  const toggle = async (id: string) => {
+    const task = tasks.find((t) => t.id === id);
 
-  const add = (text: string) =>
-    setTasks((prev) => [...prev, { id: crypto.randomUUID(), text, done: false }]);
+    if (!task) return;
+
+    const updatedDone = !task.done;
+    const updatedDate = updatedDone
+      ? new Date().toDateString()
+      : null;
+
+    const { error } = await supabase
+      .from("task")
+      .update({
+        done: updatedDone,
+        completedDate: updatedDate,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              done: updatedDone,
+              completedDate: updatedDate || undefined,
+            }
+          : t
+      )
+    );
+  };
+
+  const add = async (text: string) => {
+    if (!session?.user) return;
+
+    const newTask = {
+      text,
+      done: false,
+      user_id: session.user.id,
+    };
+
+    const { data, error } = await supabase
+      .from("task")
+      .insert([newTask])
+      .select();
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (data) {
+      setTasks((prev) => [...prev, ...data]);
+    }
+  };
   
-  const remove = (id: string) =>
-  setTasks((prev) => prev.filter((t) => t.id !== id));
+  const remove = async (id: string) => {
+    const { error } = await supabase
+      .from("task")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
 
   const resetTasks = () => {
     setTasks([]);
-    localStorage.removeItem("tasks");
     localStorage.removeItem("lastCompletedDate");
     setStreak(0);
   };
