@@ -143,6 +143,7 @@ const completed = useMemo(
       return;
     }
 
+    
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id

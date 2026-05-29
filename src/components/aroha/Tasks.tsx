@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
 export type Task = { id: string; text: string; done: boolean; completedDate?: string; };
 
@@ -14,49 +13,20 @@ type Props = {
 export const Tasks = ({ tasks, onToggle, onAdd, onDelete }: Props) => {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
+  
+  const submit = () => {
+  const v = draft.trim();
 
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-
-    getUser();
-  }, []);
-
-  const submit = async () => {
-    const v = draft.trim();
-
-    if (!v || !userId) {
-      setAdding(false);
-      return;
-    }
-
-    const { error } = await supabase.from("task").insert([
-      {
-        user_id: userId,
-        text: v,
-        done: false,
-        completedDate: null,
-      },
-    ]);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    onAdd(v);
-
-    setDraft("");
+  if (!v) {
     setAdding(false);
-  };
+    return;
+  }
+
+  onAdd(v);
+
+  setDraft("");
+  setAdding(false);
+};
 
   return (
     <section className="relative z-10 px-5 sm:px-8 animate-fade-up">
