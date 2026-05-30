@@ -10,14 +10,26 @@ import { SettingsModal } from "@/components/aroha/SettingsModal";
 import { Auth } from "@/components/aroha/Auth";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { useStreak } from "@/hooks/useStreak";
+import { useTasks } from "@/hooks/useTasks";
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [streak, setStreak] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-//load task on start
-
+  const {
+    streak,
+    longestStreak,
+    lastCompletedDate,
+    warning,
+    setStreak,
+    setLongestStreak,
+    setLastCompletedDate,
+  } = useStreak(session);
+  const {
+    tasks,
+    setTasks,
+    addTask,
+  } = useTasks(session);
 
   useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,27 +45,6 @@ const Index = () => {
   return () => subscription.unsubscribe();
 }, []);
 
-useEffect(() => {
-  if (!session?.user) return;
-
-  const loadTasks = async () => {
-    const { data, error } = await supabase
-      .from("task")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setTasks(data || []);
-  };
-
-  loadTasks();
-}, [session]);
-
 const handleLogout = async () => {
   await supabase.auth.signOut();
 };
@@ -66,44 +57,6 @@ const completed = useMemo(
   ).length;
 }, [tasks]);
 
-  useEffect(() => {
-    const todayStr = new Date().toDateString();
-    const last = localStorage.getItem("lastCompletedDate");
-
-    if (completed === 0) return; // no task done → do nothing
-
-    if (!last) {
-      setStreak(1);
-      localStorage.setItem("lastCompletedDate", todayStr);
-      return;
-    }
-
-    const lastDate = new Date(last);
-    const currentDate = new Date();
-
-    const diffDays = Math.floor(
-      (currentDate.getTime() - lastDate.getTime()) /
-      (1000 * 60 * 60 * 24)
-    );
-      
-
-    if (diffDays === 0) {
-      return; // already counted today
-    }
-
-    if (diffDays === 1) {
-      setStreak((prev) => prev + 1);
-    } else {
-      setStreak(1); // reset
-    }
-
-    localStorage.setItem("lastCompletedDate", todayStr);
-  }, [completed]);
-
-
-  useEffect(() => {
-    localStorage.setItem("streak", String(streak));
-  }, [streak]);
 
   useEffect(() => {
     let lastDate = new Date().toDateString();
@@ -118,7 +71,7 @@ const completed = useMemo(
   }, 60000);
 
   return () => clearInterval(interval);
-  }, []);
+  }, [setTasks]);
 
   const toggle = async (id: string) => {
     const task = tasks.find((t) => t.id === id);
@@ -143,6 +96,76 @@ const completed = useMemo(
       return;
     }
 
+    if (updatedDone && session?.user) {
+
+      const today = new Date().toISOString().split("T")[0];
+
+      const { data: streakData, error: streakError } = await supabase
+        .from("user_streaks")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (streakError && streakError.code !== "PGRST116") {
+        console.error(streakError);
+        return;
+      }
+
+      if (!streakData) {
+
+        await supabase.from("user_streaks").insert({
+          user_id: session.user.id,
+          current_streak: 1,
+          longest_streak: 1,
+          last_completed_date: today,
+        });
+
+        setStreak(1);
+        setLongestStreak(1);
+        setLastCompletedDate(today);
+
+      } else {
+
+        const lastDate = streakData.last_completed_date;
+
+        let newStreak = streakData.current_streak;
+
+        if (lastDate !== today) {
+
+          const last = new Date(lastDate);
+          const current = new Date(today);
+
+          const diffDays = Math.floor(
+            (current.getTime() - last.getTime()) /
+            (1000 * 60 * 60 * 24)
+          );
+
+          if (diffDays === 1) {
+            newStreak += 1;
+          } else if (diffDays > 1) {
+            newStreak = 1;
+          }
+        }
+
+        const longest = Math.max(
+          streakData.longest_streak,
+          newStreak
+        );
+
+        await supabase
+          .from("user_streaks")
+          .update({
+            current_streak: newStreak,
+            longest_streak: longest,
+            last_completed_date: today,
+          })
+          .eq("user_id", session.user.id);
+
+        setStreak(newStreak);
+        setLongestStreak(longest);
+        setLastCompletedDate(today);
+      }
+    }
     
     setTasks((prev) =>
       prev.map((t) =>
@@ -155,30 +178,6 @@ const completed = useMemo(
           : t
       )
     );
-  };
-
-  const add = async (text: string) => {
-    if (!session?.user) return;
-
-    const newTask = {
-      text,
-      done: false,
-      user_id: session.user.id,
-    };
-
-    const { data, error } = await supabase
-      .from("task")
-      .insert([newTask])
-      .select();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    if (data) {
-      setTasks((prev) => [...prev, ...data]);
-    }
   };
   
   const remove = async (id: string) => {
@@ -197,24 +196,10 @@ const completed = useMemo(
 
   const resetTasks = () => {
     setTasks([]);
-    localStorage.removeItem("lastCompletedDate");
     setStreak(0);
   };
 
-  const getStreakWarning = () => {
-    const todayStr = new Date().toDateString();
-    const last = localStorage.getItem("lastCompletedDate");
-
-    if (!last) return null;
-    if (last === todayStr) return null;
-
-    if (streak > 0) {
-      return "You haven't completed any task today — don’t break your streak.";
-    }
-
-    return null;
-  };
-
+  
   const getSmartSuggestion = () => {
     const savedReflection = localStorage.getItem("reflection");
     const mood = savedReflection ? JSON.parse(savedReflection).mood : null;
@@ -269,7 +254,6 @@ const completed = useMemo(
     return "Keep showing up daily. That’s how growth happens.";
   };
 
-  const warning = getStreakWarning();
   const insight = getDailyInsight();   
   const suggestion = getSmartSuggestion();
   
@@ -334,7 +318,7 @@ const completed = useMemo(
           <Tasks
             tasks={tasks}
             onToggle={toggle}
-            onAdd={add}
+            onAdd={addTask}
             onDelete={remove}
           />
 
