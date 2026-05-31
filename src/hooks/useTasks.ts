@@ -54,9 +54,70 @@ export const useTasks = (session: Session | null) => {
     }
   };
 
+  const removeTask = async (id: string) => {
+    const { error } = await supabase
+      .from("task")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const toggleTask = async (
+    id: string,
+    updateStreak: () => Promise<void>
+  ) => {
+    const task = tasks.find((t) => t.id === id);
+
+    if (!task) return;
+
+    const updatedDone = !task.done;
+
+    const updatedDate = updatedDone
+      ? new Date().toDateString()
+      : null;
+
+    const { error } = await supabase
+      .from("task")
+      .update({
+        done: updatedDone,
+        completedDate: updatedDate,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (updatedDone) {
+      await updateStreak();
+    }
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              done: updatedDone,
+              completedDate: updatedDate || undefined,
+            }
+          : t
+      )
+    );
+  };
+
   return {
     tasks,
     setTasks,
     addTask,
+    removeTask,
+    toggleTask,
   };
 };
+

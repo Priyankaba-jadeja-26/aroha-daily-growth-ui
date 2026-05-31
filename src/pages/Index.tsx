@@ -18,17 +18,16 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const {
     streak,
-    longestStreak,
-    lastCompletedDate,
     warning,
     setStreak,
-    setLongestStreak,
-    setLastCompletedDate,
+    updateStreak,
   } = useStreak(session);
   const {
     tasks,
     setTasks,
     addTask,
+    removeTask,
+    toggleTask,
   } = useTasks(session);
 
   useEffect(() => {
@@ -73,126 +72,7 @@ const completed = useMemo(
   return () => clearInterval(interval);
   }, [setTasks]);
 
-  const toggle = async (id: string) => {
-    const task = tasks.find((t) => t.id === id);
-
-    if (!task) return;
-
-    const updatedDone = !task.done;
-    const updatedDate = updatedDone
-      ? new Date().toDateString()
-      : null;
-
-    const { error } = await supabase
-      .from("task")
-      .update({
-        done: updatedDone,
-        completedDate: updatedDate,
-      })
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    if (updatedDone && session?.user) {
-
-      const today = new Date().toISOString().split("T")[0];
-
-      const { data: streakData, error: streakError } = await supabase
-        .from("user_streaks")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (streakError && streakError.code !== "PGRST116") {
-        console.error(streakError);
-        return;
-      }
-
-      if (!streakData) {
-
-        await supabase.from("user_streaks").insert({
-          user_id: session.user.id,
-          current_streak: 1,
-          longest_streak: 1,
-          last_completed_date: today,
-        });
-
-        setStreak(1);
-        setLongestStreak(1);
-        setLastCompletedDate(today);
-
-      } else {
-
-        const lastDate = streakData.last_completed_date;
-
-        let newStreak = streakData.current_streak;
-
-        if (lastDate !== today) {
-
-          const last = new Date(lastDate);
-          const current = new Date(today);
-
-          const diffDays = Math.floor(
-            (current.getTime() - last.getTime()) /
-            (1000 * 60 * 60 * 24)
-          );
-
-          if (diffDays === 1) {
-            newStreak += 1;
-          } else if (diffDays > 1) {
-            newStreak = 1;
-          }
-        }
-
-        const longest = Math.max(
-          streakData.longest_streak,
-          newStreak
-        );
-
-        await supabase
-          .from("user_streaks")
-          .update({
-            current_streak: newStreak,
-            longest_streak: longest,
-            last_completed_date: today,
-          })
-          .eq("user_id", session.user.id);
-
-        setStreak(newStreak);
-        setLongestStreak(longest);
-        setLastCompletedDate(today);
-      }
-    }
-    
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              done: updatedDone,
-              completedDate: updatedDate || undefined,
-            }
-          : t
-      )
-    );
-  };
   
-  const remove = async (id: string) => {
-    const { error } = await supabase
-      .from("task")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
 
   const resetTasks = () => {
     setTasks([]);
@@ -317,9 +197,9 @@ const completed = useMemo(
 
           <Tasks
             tasks={tasks}
-            onToggle={toggle}
+            onToggle={(id) => toggleTask(id, updateStreak)}
             onAdd={addTask}
-            onDelete={remove}
+            onDelete={removeTask}
           />
 
           <Quote />
