@@ -8,14 +8,35 @@ const moods = [
   { emoji: "😔", label: "Low" },
   { emoji: "😣", label: "Anxious" },
   { emoji: "🥱", label: "Tired" },
-];
+];                  
 
-export const Reflection = () => {
-  const [value, setValue] = useState("");
-  const [mood, setMood] = useState<string | null>(null);
-  const [saved, setSaved] = useState<{ text: string; mood: string | null } | null>(null);
+type ReflectionProps = {
+  reflection: string;
+  setReflection: (value: string) => void;
+
+  mood: string;
+  setMood: (value: string) => void;
+
+  aiResponse: string;
+  setAiResponse: (value: string) => void;
+
+  saveReflection: (
+    reflectionText: string,
+    moodValue: string,
+    aiValue: string
+  ) => Promise<void>;
+};
+
+export const Reflection = ({
+  reflection,
+  setReflection,
+  mood,
+  setMood,
+  aiResponse,
+  setAiResponse,
+  saveReflection,
+}: ReflectionProps) => {
   const [justSaved, setJustSaved] = useState(false);
-  const [response, setResponse] = useState<string | null>(null);
 
   const generateResponse = (text: string, mood: string | null) => {
   const lower = text.toLowerCase();
@@ -43,33 +64,22 @@ export const Reflection = () => {
     return "You're doing better than you think. Keep going.";
 };
 
-  const handleSave = () => {
-    if (!value.trim()) return;
+  const handleSave = async () => {
+    if (!reflection.trim()) return;
 
-    const ai = generateResponse(value, mood);
+    const ai = generateResponse(reflection, mood);
 
-    const data = { text: value, mood, ai };
+    setAiResponse(ai);
 
-    localStorage.setItem("reflection", JSON.stringify(data));
-    setSaved(data);
-    setResponse(ai);
-
-    setValue("");
-    setMood(null);
-
+    await saveReflection(
+      reflection,
+      mood,
+      ai
+    );
+    
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
   };
-
-  useEffect(() => {
-    const stored = localStorage.getItem("reflection");
-    if (stored){
-      const parsed = JSON.parse(stored);
-      setSaved(parsed);
-      setResponse(parsed.ai);
-    };
-
-}, []);
 
   return (
     <section className="relative z-10 px-5 pb-10 sm:px-8 animate-fade-up">
@@ -95,7 +105,7 @@ export const Reflection = () => {
             return (
               <button
                 key={m.label}
-                onClick={() => setMood(active ? null : m.label)}
+                onClick={() => setMood(active ? "" : m.label)}
                 className={`group flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-smooth hover:scale-105 ${
                   active
                     ? "border-transparent bg-sunrise text-white shadow-glow"
@@ -113,8 +123,8 @@ export const Reflection = () => {
         </div>
 
         <textarea
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          value={reflection}
+          onChange={(e) => setReflection(e.target.value)}
           placeholder="Write your thoughts..."
           rows={5}
           className="w-full resize-none rounded-2xl border border-border bg-white/60 p-4 text-[15px] font-light leading-relaxed text-foreground outline-none transition-smooth placeholder:text-muted-foreground focus:border-transparent focus:ring-2 focus:ring-ring focus:bg-white/80"
@@ -122,7 +132,7 @@ export const Reflection = () => {
 
         <div className="mt-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {value.length} characters{mood ? ` · feeling ${mood.toLowerCase()}` : ""}
+            {reflection.length} characters{mood ? ` · feeling ${mood.toLowerCase()}` : ""}
           </span>
           <button
             onClick={handleSave}
@@ -138,40 +148,42 @@ export const Reflection = () => {
           </p>
         )}
 
-        {saved && (
+        {reflection ? (
           <div className="mt-6 border-t border-border/40 pt-4">
             <div className="rounded-2xl bg-white/60 p-4 border border-border shadow-soft backdrop-blur">
-              <div className="mt-5 rounded-2xl border border-border bg-white/0 p-4 border border-border shadow-soft backdrop-blur">
+              <div className="mt-5 rounded-2xl border border-border bg-white/0 p-4 shadow-soft backdrop-blur">
                 <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-2">
                   Saved Reflection
                 </p>
 
-                {saved.mood && (
+                {mood && (
                   <p className="text-xs text-muted-foreground mb-1">
-                    Mood: <span className="font-medium text-foreground">{saved.mood}</span>
+                    Mood:{" "}
+                    <span className="font-medium text-foreground">
+                      {mood}
+                    </span>
                   </p>
                 )}
 
                 <p className="text-sm text-foreground leading-relaxed">
-                  {saved.text}
+                  {reflection}
                 </p>
               </div>
             </div>
           </div>
-        )}
-        {!saved && (
+        ) : (
           <p className="text-xs text-muted-foreground mt-3">
-              No reflection saved yet.
+            No reflection saved yet.
           </p>
         )}
 
-         {response && (
+         {aiResponse && (
           <div className="mt-4 rounded-2xl bg-gradient-to-r from-pink-100 to-orange-100 p-4">
             <p className="text-xs font-semibold text-muted-foreground mb-1">
               Aroha Insight
             </p>
             <p className="text-sm text-foreground">
-              {response}
+              {aiResponse}
             </p>
           </div>
         )}

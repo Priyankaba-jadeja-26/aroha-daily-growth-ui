@@ -12,6 +12,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useStreak } from "@/hooks/useStreak";
 import { useTasks } from "@/hooks/useTasks";
+import { useReflection } from "@/hooks/useReflection";
 
 const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -29,6 +30,16 @@ const Index = () => {
     removeTask,
     toggleTask,
   } = useTasks(session);
+  const {
+    reflection,
+    setReflection,
+    mood,
+    setMood,
+    aiResponse,
+    setAiResponse,
+    history,
+    saveReflection,
+  } = useReflection(session);
 
   useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -81,12 +92,11 @@ const completed = useMemo(
 
   
   const getSmartSuggestion = () => {
-    const savedReflection = localStorage.getItem("reflection");
-    const mood = savedReflection ? JSON.parse(savedReflection).mood : null;
+    const currentMood = mood;
 
     if (completed === 0) {
-      if (mood === "Low") return "Start very small today. Even 1 task is a win.";
-      if (mood === "Anxious") return "Pause and take one calming action first.";
+      if (currentMood === "Low") return "Start very small today. Even 1 task is a win.";
+      if (currentMood === "Anxious") return "Pause and take one calming action first.";
       if (streak >= 3) return "Don’t break your streak. Just complete one task.";
       return "Start your day with one simple action.";
     }
@@ -203,7 +213,14 @@ const completed = useMemo(
           />
 
           <Quote />
-          <Reflection />
+          <Reflection reflection={reflection}
+            setReflection={setReflection}
+            mood={mood}
+            setMood={setMood}
+            aiResponse={aiResponse}
+            setAiResponse={setAiResponse}
+            saveReflection={saveReflection}
+          />
 
           <button
             onClick={handleLogout}
